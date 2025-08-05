@@ -5,7 +5,8 @@ import { validate as isUUID } from "uuid";
 import { RouteEntity } from "./route.entity";
 import { PointEntity } from "../point/point.entity";
 import { Photo } from "../photo/photo.entity";
-import { CreateRouteDto } from "./create-route.dto";
+import { CreateRouteDto } from "../../dtos/create-route.dto";
+import { ReadRouteDto } from '../../dtos/read-route.dto';
 
 @Injectable()
 export class RoutesService {
@@ -38,6 +39,7 @@ export class RoutesService {
       const pt = this.pointRepo.create({
         lat: p.lat,
         lng: p.lng,
+        name: p.name,
         description: p.description,
       });
 
@@ -98,6 +100,7 @@ export class RoutesService {
       const pt = new PointEntity();
       pt.lat = p.lat;
       pt.lng = p.lng;
+      pt.name = p.name;
       pt.description = p.description;
       pt.photos = [];
 
@@ -128,20 +131,34 @@ export class RoutesService {
   }
 
   /** Получить все маршруты вместе с точками и фото */
-  async findAll(): Promise<RouteEntity[]> {
-    return this.routeRepo.find({
-      relations: ["points", "points.photos"],
+  async findAll(): Promise<ReadRouteDto[]> {
+    const routes = await this.routeRepo.find({
+      relations: [
+        'cover',
+        'points',
+        'points.photos',
+      ],
+    });
+
+    if (routes.length === 0) {
+      return [];
+    }
+
+    return routes.map((route, i, arr) => {
+      const prevId = i > 0 ? arr[i - 1].id : null;
+      const nextId = i < arr.length - 1 ? arr[i + 1].id : null;
+      return new ReadRouteDto(route, prevId, nextId);
     });
   }
 
   /** Получить один маршрут по ID */
-  async findOne(id: string): Promise<RouteEntity> {
-    const route = await this.routeRepo.findOne({
-      where: { id },
-      relations: ["points", "points.photos"],
-    });
-    if (!route) throw new NotFoundException("Route not found");
-    return route;
+  async findOne(id: string): Promise<ReadRouteDto> {
+    const routes = await this.findAll();
+    const dto = routes.find(r => r.id === id);
+    if (!dto) {
+      throw new NotFoundException('Route not found');
+    }
+    return dto;
   }
 
   /** Удалить маршрут по ID */

@@ -19,6 +19,9 @@ export class PointEntity {
   @Column("float")
   lng: number;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  name?: string;
+
   @Column({ type: "text", nullable: true })
   description?: string;
 

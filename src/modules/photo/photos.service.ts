@@ -35,7 +35,7 @@ export class PhotosService {
 
     // создаём превью 400px в webp
     const previewPath = `${base}_preview.webp`;
-    await sharp(filePath).resize(400).webp({ quality: 80 }).toFile(previewPath);
+    await sharp(filePath).resize(520).webp({ quality: 90 }).toFile(previewPath);
 
     // конвертация оригинала в webp (если это не .webp)
     let webpPath: string;
